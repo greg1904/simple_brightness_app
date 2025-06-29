@@ -1,8 +1,7 @@
-Simple brightness tray app - must be run with sudo
+Simple brightness tray app - must be run with 
 
-requires both XRANDR and DDCUTIL installed
+python3 main.py
 
-scrolling on the tray icon changes XRANDR brightness from 100 - 0
-clicking on the icon brings up 3 options for changing the monitors brightness through DDCUTIL - sadly performance is too slow to only rely on DDCUTIL
+requires DDCUTIL installed
 
-TODO - implement Control
+clicking on the icon brings up options for changing the monitors brightness through DDCUTIL in 25% steps

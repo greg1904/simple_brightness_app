@@ -1,0 +1,14 @@
+[Unit]
+Description=Simple Brightness App
+After=multi-user.target
+
+[Service]
+user=tom
+Type=simple
+WorkingDirectory={{WORKING_DIR}}
+ExecStart=/bin/bash start.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

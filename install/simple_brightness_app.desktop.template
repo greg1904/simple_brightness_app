@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Simple Brightness App
+Comment=Displays in system tray to allow quick changes to display brightness
+Exec=/bin/bash -c "cd {{WORKING_DIR}} && ./start.sh"
+Icon={{WORKING_DIR}}/ui/icon.png
+Terminal=false
+Categories=Utility;
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=5 # Optional: Adds a 5-second delay before starting (useful if other things need to load first)

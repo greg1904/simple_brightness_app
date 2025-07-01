@@ -49,11 +49,11 @@ if __name__ == '__main__':
 
 
 
-# below is the code for ddcutil - performance is very bad use xrandr instead
+# below is the code for /usr/bin/ddcutil - performance is very bad use xrandr instead
 
 def findMonitors():
         try:
-            getNames = str(subprocess.check_output(["ddcutil", "detect"]),
+            getNames = str(subprocess.check_output(["/usr/bin/ddcutil", "detect"]),
                            'utf-8').split("\n")
 
             for i in range(len(getNames)):
@@ -69,7 +69,7 @@ def findMonitors():
             for i in range(len(displayNamesDDC)):
                 if not displayNames[i] == "Invalid display":
                     brightnessValue = str(subprocess.check_output(
-                        ["ddcutil", "getvcp", "10", "-d", str(i + 1)]), 'utf-8')
+                        ["/usr/bin/ddcutil", "getvcp", "10", "-d", str(i + 1)]), 'utf-8')
 
                     displayMaxBrightnesses.append(int(
                         brightnessValue.split(",")[1].split("=")[1].strip()))
@@ -89,11 +89,11 @@ def directlySetMaxBrightness(percentage_int):
         percentage = round(percentage_int) / 100
 
         for i in range(len(displayNamesDDC)):
-            print("ddcutil", "setvcp", "10", str(int(
+            print("/usr/bin/ddcutil", "setvcp", "10", str(int(
             percentage_int)), "-d",
             str(i+1))
 
-            subprocess.run(["ddcutil", "setvcp", "10", str(int(
+            subprocess.run(["/usr/bin/ddcutil", "setvcp", "10", str(int(
             percentage_int)), "-d",
             str(i+1) ])
              

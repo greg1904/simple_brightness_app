@@ -8,15 +8,16 @@ class Display:
         self.display_id = display_id
         self.display_name = display_name
         self.display_capabilities = display_capabilities
+        self.is_active = True
 
     def __set_capability(self, capability : DisplayCapability, new_value):
         capability_id = self.display_capabilities.dictionary[capability.value]["code"]
-        query_output = subprocess.run(["ddcutil", "setvcp", str(capability_id), str(new_value), "--display", str(self.display_id)], capture_output=True, text=True, check=True)
+        query_output = subprocess.run(["/usr/bin/ddcutil", "setvcp", str(capability_id), str(new_value), "--display", str(self.display_id)], capture_output=True, text=True, check=True)
         return query_output.stdout
     
     def __read_capability(self, capability : DisplayCapability):
         capability_id = self.display_capabilities.dictionary[capability.value]["code"]
-        query_output = subprocess.run(["ddcutil", "getvcp", str(capability_id), "--display", str(self.display_id)], capture_output=True, text=True, check=True)
+        query_output = subprocess.run(["/usr/bin/ddcutil", "getvcp", str(capability_id), "--display", str(self.display_id)], capture_output=True, text=True, check=True)
         return query_output.stdout
     
     def get_capability_values(self, capability : DisplayCapability):
@@ -52,11 +53,16 @@ class Display:
         return monitor_capability
     
     def apply_changes_in_capabilities(self):
+        if self.is_active == False:
+            return
+        
         for capability_key in self.display_capabilities.dictionary:
             capability = self.display_capabilities.dictionary[capability_key]
             if capability["currentValue"] != capability["actualValue"]:
                 self.__set_capability(DisplayCapability(capability_key), capability["currentValue"])
                 capability["actualValue"] = capability["currentValue"]
 
+    def set_is_active(self, is_active):
+        self.is_active = is_active
 
                     

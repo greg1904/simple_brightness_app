@@ -1,111 +1,97 @@
-import gi, os
+import os
 
 from util.DisplayCapability import DisplayCapability
 from util.Display import Display
 from typing import List
+import pystray
+from PIL import Image
 
-gi.require_versions({"Gtk" : "3.0", "XApp" : "1.0"})
 
-from gi.repository import Gtk, XApp
 
 class TrayApp:
     def __init__(self, displays : List[Display]):
         self.display_toggles = {}
-        self.is_dummy_selection = False
+        self.display_storage = {}
         self.displays = displays
         self.on_scroll_scheduler = "NULL"
         for display in self.displays:
             display.get_capability_values(DisplayCapability.BRIGHTNESS)
 
-        self.status_icon = XApp.StatusIcon()
-
-        image_path = os.path.abspath('./ui/icon.png')
-        self.status_icon.set_icon_name(image_path)
-        self.status_icon.set_tooltip_text("Simple Brightness App")
+        image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'icon.png')
+        self.image = Image.open(image_path)
+        
         menu = self.menu()
-        self.status_icon.set_secondary_menu(menu)
-        self.status_icon.set_primary_menu(menu)
+        self.icon = pystray.Icon("gregssimplbrightapp", self.image, "Simple Brightness App", menu)
+
+    def run(self):
+        self.icon.run()
 
     def menu(self):
-        menu = Gtk.Menu()
+        menu = []
 
         if len(self.displays) > 1:
             # multiple monitors exist - allow toggling on and off
-            select_all = Gtk.CheckMenuItem(label="all Displays")
-            select_all.set_draw_as_radio(draw_as_radio=True)
-            select_all.set_active(True)
-            select_all.connect("toggled", self.display_selection_clicked)
+            select_all = pystray.MenuItem("all Displays", self.display_selection_clicked, checked=lambda item: self.display_toggles["ALL"], radio=True )
             menu.append(select_all)
-            self.display_toggles.update({select_all : "BOTH"})
+            self.display_toggles.update({"ALL" : True})
+            self.display_storage.update({select_all : "ALL"})
 
             for display in self.displays:
                 display_label = "Display {0}: {1}".format(display.display_id, display.display_name)
-                entry = Gtk.CheckMenuItem(label=display_label)
-                entry.set_draw_as_radio(draw_as_radio=True)
-                entry.connect("toggled", self.display_selection_clicked)
-                self.display_toggles.update({entry : display})
+                entry = pystray.MenuItem(display_label, self.display_selection_clicked, checked=lambda item: self.display_toggles[str(display.display_id)], radio=True)
+                self.display_toggles.update({str(display.display_id) : False})
+                self.display_storage.update({entry : display})
                 menu.append(entry)
 
 
-            separator = Gtk.SeparatorMenuItem()
+            separator = pystray.Menu.SEPARATOR
             menu.append(separator)
                     
-        max_br = Gtk.MenuItem(label='Max. Brightness')
-        max_br.connect('activate', self.set_max_dp_brightness)
+        max_br = pystray.MenuItem('Max. Brightness', self.set_max_dp_brightness)
         menu.append(max_br)
 
-        br_75 = Gtk.MenuItem(label='75% Brightness')
-        br_75.connect('activate', self.set_75_dp_brightness)
+        br_75 = pystray.MenuItem('75% Brightness', self.set_75_dp_brightness)
         menu.append(br_75)
 
-        br_50 = Gtk.MenuItem(label='50% Brightness')
-        br_50.connect('activate', self.set_50_dp_brightness)
+        br_50 = pystray.MenuItem('50% Brightness', self.set_50_dp_brightness)
         menu.append(br_50)
 
-        br25 = Gtk.MenuItem(label='25% Brightness')
-        br25.connect('activate', self.set_25_dp_brightness)
+        br25 = pystray.MenuItem('25% Brightness', self.set_25_dp_brightness)
         menu.append(br25)
 
-        min_br = Gtk.MenuItem(label='Min. Brightness')
-        min_br.connect('activate', self.set_0_dp_brightness)
+        min_br = pystray.MenuItem('Min. Brightness', self.set_0_dp_brightness)
         menu.append(min_br)
 
-        exittray = Gtk.ImageMenuItem(label='Close', image=Gtk.Image.new_from_icon_name("application-exit", 16))
-        exittray.connect('activate', quit)
+        exittray = pystray.MenuItem('Exit', self.quit)
         menu.append(exittray)
         
-        menu.show_all()
-        return menu
-  
-    def open_app(self, item):
-        window = Gtk.ApplicationWindow()
-        window.present()
+        return pystray.Menu(*menu)
 
-    def display_selection_clicked(self, item):
-        if self.is_dummy_selection == True:
-            return
-        
-        toggle_display = self.display_toggles[item]
-        
-        self.is_dummy_selection = True
-        for ditem in self.display_toggles:
-            if ditem == item:
-                ditem.set_active(True)
-            else:
-                ditem.set_active(False)
-        self.is_dummy_selection = False
+    def display_selection_clicked(self, icon, item):        
+        toggle_display = self.display_storage[item]
 
-        if toggle_display == "BOTH":
+        if toggle_display == "ALL":
             for display in self.displays:
                 display.set_is_active(True)
-
-            
+            for toggle in self.display_toggles:
+                if toggle == "ALL":
+                    self.display_toggles[toggle] = True
+                else:
+                    self.display_toggles[toggle] = False
         else:
             for display in self.displays:
                 if display == toggle_display:
                     display.set_is_active(True)
                 else:
-                    display.set_is_active(False)    
+                    display.set_is_active(False)
+                
+            for toggle in self.display_toggles:
+                if toggle == "ALL":
+                    self.display_toggles[toggle] = False
+                elif toggle == toggle_display.display_id:
+                    self.display_toggles[toggle] = True
+                else:
+                    self.display_toggles[toggle] = False
 
 
     def set_max_dp_brightness(self, item):
@@ -129,8 +115,9 @@ class TrayApp:
     def set_0_dp_brightness(self, item):
         self.set_dp_brightness(0)
     
-    def quit(*_):
-        Gtk.main_quit()
+    def quit(self, icon, item):
+        self.icon.stop()
+        
 
     def send_vals_to_displays(self, ignore_scheduler = False):
         if self.on_scroll_scheduler == "NULL" and ignore_scheduler == False:

@@ -5,7 +5,7 @@ requires DDCUTIL installed!
 - uses pystray for system icon - configure backend in start.sh!
 
 first install using install.sh
-- creates a .desktop file in ./install
+- creates a .desktop file in ./install, which is also copied to the autostart directory (~/.config/autostart/simple_brightness_app.desktop)
 - creates a venv and installs dependencies
 
 run with:

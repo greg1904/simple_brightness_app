@@ -4,13 +4,14 @@ import subprocess
 from util.DisplayCapabilities import DisplayCapabilities
 from util.DisplayCapability import DisplayCapability
 from util.Display import Display
+from util.constants import DDCUTIL_PATH
 
 def __detect():
-    query_output = subprocess.run(["/usr/bin/ddcutil", "detect"], capture_output=True, text=True, check=True)
+    query_output = subprocess.run([DDCUTIL_PATH, "detect"], capture_output=True, text=True, check=True)
     return query_output.stdout
 
-def __display_capabilities_read(display_id : int):
-    query_output = subprocess.run(["/usr/bin/ddcutil", "capabilities", "--display", str(display_id)], capture_output=True, text=True, check=True)
+def __display_capabilities_read(display_id : str):
+    query_output = subprocess.run([DDCUTIL_PATH, "capabilities", "--display", str(display_id)], capture_output=True, text=True, check=True)
     return query_output.stdout
 
 
@@ -29,7 +30,7 @@ def __extract_displays(detect : str):
     return displays
 
 
-def __get_display(display_id : int):
+def __get_display(display_id : str):
     output = __display_capabilities_read(display_id)
     capabilities = DisplayCapabilities()
     in_vcp_features = False

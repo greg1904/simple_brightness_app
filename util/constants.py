@@ -1,0 +1,1 @@
+DDCUTIL_PATH = "/usr/bin/ddcutil"

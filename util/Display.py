@@ -1,10 +1,11 @@
 from util.DisplayCapability import DisplayCapability
 from util.DisplayCapabilities import DisplayCapabilities
+from util.constants import DDCUTIL_PATH
 import subprocess
 
 
 class Display:
-    def __init__(self, display_id : int, display_name : str, display_capabilities : DisplayCapabilities):
+    def __init__(self, display_id : str, display_name : str, display_capabilities : DisplayCapabilities):
         self.display_id = display_id
         self.display_name = display_name
         self.display_capabilities = display_capabilities
@@ -12,12 +13,12 @@ class Display:
 
     def __set_capability(self, capability : DisplayCapability, new_value):
         capability_id = self.display_capabilities.dictionary[capability.value]["code"]
-        query_output = subprocess.run(["/usr/bin/ddcutil", "setvcp", str(capability_id), str(new_value), "--display", str(self.display_id)], capture_output=True, text=True, check=True)
+        query_output = subprocess.run([DDCUTIL_PATH, "setvcp", str(capability_id), str(new_value), "--display", str(self.display_id)], capture_output=True, text=True, check=True)
         return query_output.stdout
     
     def __read_capability(self, capability : DisplayCapability):
         capability_id = self.display_capabilities.dictionary[capability.value]["code"]
-        query_output = subprocess.run(["/usr/bin/ddcutil", "getvcp", str(capability_id), "--display", str(self.display_id)], capture_output=True, text=True, check=True)
+        query_output = subprocess.run([DDCUTIL_PATH, "getvcp", str(capability_id), "--display", str(self.display_id)], capture_output=True, text=True, check=True)
         return query_output.stdout
     
     def get_capability_values(self, capability : DisplayCapability):

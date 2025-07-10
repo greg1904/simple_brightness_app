@@ -7,10 +7,10 @@ import pystray
 from PIL import Image
 
 
+display_toggles = {}
 
 class TrayApp:
     def __init__(self, displays : List[Display]):
-        self.display_toggles = {}
         self.display_storage = {}
         self.displays = displays
         self.on_scroll_scheduler = "NULL"
@@ -27,19 +27,20 @@ class TrayApp:
         self.icon.run()
 
     def menu(self):
+        global display_toggles
         menu = []
 
         if len(self.displays) > 1:
             # multiple monitors exist - allow toggling on and off
-            select_all = pystray.MenuItem("all Displays", self.display_selection_clicked, checked=lambda item: self.display_toggles["ALL"], radio=True )
+            select_all = pystray.MenuItem("all Displays", self.display_selection_clicked, checked=lambda item: display_toggles["ALL"], radio=True )
             menu.append(select_all)
-            self.display_toggles.update({"ALL" : True})
+            display_toggles.update({"ALL" : True})
             self.display_storage.update({select_all : "ALL"})
 
             for display in self.displays:
                 display_label = "Display {0}: {1}".format(display.display_id, display.display_name)
-                entry = pystray.MenuItem(display_label, self.display_selection_clicked, checked=lambda item: self.display_toggles[str(display.display_id)], radio=True)
-                self.display_toggles.update({str(display.display_id) : False})
+                entry = pystray.MenuItem(display_label, self.display_selection_clicked, checked=lambda item, display_id = display.display_id: display_toggles[display_id], radio=True)
+                display_toggles.update({str(display.display_id) : False})
                 self.display_storage.update({entry : display})
                 menu.append(entry)
 
@@ -73,11 +74,11 @@ class TrayApp:
         if toggle_display == "ALL":
             for display in self.displays:
                 display.set_is_active(True)
-            for toggle in self.display_toggles:
+            for toggle in display_toggles:
                 if toggle == "ALL":
-                    self.display_toggles[toggle] = True
+                    display_toggles[toggle] = True
                 else:
-                    self.display_toggles[toggle] = False
+                    display_toggles[toggle] = False
         else:
             for display in self.displays:
                 if display == toggle_display:
@@ -85,13 +86,14 @@ class TrayApp:
                 else:
                     display.set_is_active(False)
                 
-            for toggle in self.display_toggles:
+            for toggle in display_toggles:
                 if toggle == "ALL":
-                    self.display_toggles[toggle] = False
+                    display_toggles[toggle] = False
                 elif toggle == toggle_display.display_id:
-                    self.display_toggles[toggle] = True
+                    display_toggles[toggle] = True
                 else:
-                    self.display_toggles[toggle] = False
+                    display_toggles[toggle] = False
+        icon.update_menu()
 
 
     def set_max_dp_brightness(self, item):
